@@ -1,0 +1,120 @@
+.sidebar {
+    width: 250px;
+    height: 95vh;
+    margin: 2.5vh;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem;
+    border-radius: 20px;
+    position: sticky;
+    top: 2.5vh;
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 3rem;
+    padding-left: 0.5rem;
+    color: var(--accent-color);
+}
+
+.logo-text {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: white;
+}
+
+.spin-slow {
+    animation: spin 10s linear infinite;
+}
+
+.nav-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 12px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all 0.2s;
+    font-weight: 500;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+}
+
+.nav-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    transform: translateX(5px);
+}
+
+.nav-item.active {
+    background: var(--accent-color);
+    color: white;
+    box-shadow: 0 4px 20px rgba(219, 39, 119, 0.3);
+}
+
+.logout-btn {
+    color: #ef4444;
+    margin-top: auto;
+}
+
+.logout-btn:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        width: auto;
+        height: auto;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        top: auto;
+        flex-direction: row;
+        margin: 0;
+        padding: 1rem;
+        border-radius: 0;
+        z-index: 100;
+        border-top: 1px solid var(--glass-border);
+        justify-content: space-around;
+        background: #0f0f11;
+    }
+
+    .sidebar-header,
+    .logo-text,
+    .sidebar-footer {
+        display: none;
+    }
+
+    .nav-links {
+        flex-direction: row;
+        width: 100%;
+        justify-content: space-around;
+    }
+
+    .nav-item {
+        padding: 0.5rem;
+        flex-direction: column;
+        gap: 0.25rem;
+        font-size: 0.7rem;
+        align-items: center;
+        width: auto;
+    }
+
+    .nav-item:hover {
+        transform: none;
+    }
+}
