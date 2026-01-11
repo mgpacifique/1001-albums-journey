@@ -234,6 +234,35 @@ export default function Stats({ history }) {
                         </div>
                     </div>
                 </div>
+
+                {/* Top Genres Chart (Moved Here) */}
+                <div className="chart-card glass-panel half-width">
+                    <h3>Top Genres</h3>
+                    <div className="chart-wrapper">
+                        <div className="chart-scroll-container">
+                            <div className="chart-inner-wrapper">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={genreData} layout="vertical" margin={{ left: 10, right: 10, top: 10, bottom: 10 }}>
+                                        <XAxis type="number" hide />
+                                        <YAxis
+                                            dataKey="name"
+                                            type="category"
+                                            width={90}
+                                            tick={{ fill: '#aaa', fontSize: 11 }}
+                                            stroke="#444"
+                                            interval={0}
+                                        />
+                                        <Tooltip
+                                            contentStyle={{ background: '#18181b', border: '1px solid #333', fontSize: '12px' }}
+                                            itemStyle={{ color: '#fff' }}
+                                        />
+                                        <Bar dataKey="value" radius={[0, 4, 4, 0]} fill="#0891b2" barSize={16} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {/* Lists Table Grid */}
@@ -250,7 +279,6 @@ export default function Stats({ history }) {
                         </div>
 
                         <div className="stats-collage-grid" ref={fiveStarRef}>
-                            <h2 className="export-title">Loved (5 Stars)</h2>
                             <h2 className="export-title">Loved (5 Stars)</h2>
                             {fiveStarAlbums.length === 0 && <p className="empty-text">No 5-star albums yet.</p>}
                             {fiveStarAlbums.map((a, i) => (
@@ -277,7 +305,6 @@ export default function Stats({ history }) {
 
                         <div className="stats-collage-grid" ref={oneStarRef}>
                             <h2 className="export-title">Disliked (1 Star)</h2>
-                            <h2 className="export-title">Disliked (1 Star)</h2>
                             {oneStarAlbums.length === 0 && <p className="empty-text">No 1-star albums yet.</p>}
                             {oneStarAlbums.map((a, i) => (
                                 <div key={i} className="stats-collage-item">
@@ -294,25 +321,7 @@ export default function Stats({ history }) {
                 </div>
             )}
 
-            <div className="charts-grid">
-                <div className="chart-card glass-panel centered-chart-card">
-                    <h3>Top Genres</h3>
-                    <div className="chart-wrapper">
-                        <div className="chart-scroll-container">
-                            <div className="chart-inner-wrapper">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={genreData} layout="vertical" margin={{ left: 40 }}>
-                                        <XAxis type="number" hide />
-                                        <YAxis dataKey="name" type="category" width={100} tick={{ fill: '#aaa', fontSize: 12 }} stroke="#444" />
-                                        <Tooltip contentStyle={{ background: '#18181b', border: '1px solid #333' }} itemStyle={{ color: '#fff' }} />
-                                        <Bar dataKey="value" radius={[0, 4, 4, 0]} fill="#0891b2" />
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+
 
             <div className="album-wall-section">
                 <div className="wall-header">
@@ -323,7 +332,6 @@ export default function Stats({ history }) {
                 </div>
 
                 <div className="album-wall" ref={wallRef}>
-                    <h2 className="export-title">My Album Journey</h2>
                     <h2 className="export-title">My Album Journey</h2>
                     {history.map((album, i) => (
                         <div key={i} className="wall-item">
