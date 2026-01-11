@@ -260,6 +260,14 @@
 
 /* RESPONSIVE */
 @media (max-width: 768px) {
+    .dashboard {
+        padding: 1rem;
+    }
+
+    .project-overview-section {
+        margin-top: 2rem;
+    }
+
     .overview-grid {
         grid-template-columns: 1fr;
         /* Stack cards on mobile */
@@ -271,5 +279,14 @@
 
     .dashboard-header h1 {
         font-size: 2rem;
+    }
+
+    .dashboard-collage {
+        height: 200px;
+    }
+
+    .collage-grid {
+        transform: scale(1);
+        /* Remove zoom on mobile to prevent overflow/mess */
     }
 }

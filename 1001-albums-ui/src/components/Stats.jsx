@@ -110,15 +110,35 @@ export default function Stats({ history }) {
 
 
     // Generic Export Function
-    const handleExport = async (ref, filename) => {
+    const handleExport = async (ref, filename, titleText) => {
         if (!ref.current) return;
         setExporting(true);
         try {
             const canvas = await html2canvas(ref.current, {
                 useCORS: true,
                 backgroundColor: '#0f0f11',
-                scale: 2
+                scale: 2,
+                onclone: (clonedDoc) => {
+                    const clonedNode = clonedDoc.body.querySelector(`[class*="${ref.current.className.split(' ')[0]}"]`);
+                    // Or better, find the node by checking content, but simpler works if ref works.
+                    // Actually, onclone gives the WHOLE doc. We need to manipulate the TARGET node inside it.
+                    // Since we pass the ref which is a node, html2canvas renders THAT node.
+                    // BUT, onclone allows modifying the cloned document BEFORE render. 
+                    // So we can find the element equivalent to ref.current and prepend a title.
+                    // However, finding the exact element in cloned doc can be tricky if id is missing.
+                    // Let's assume we wrappted the content.
+
+                    // Simpler Strategy:
+                    // Create a style block to hide specific elements if needed
+                    const style = clonedDoc.createElement('style');
+                    style.innerHTML = `.export-title { display: block !important; margin-bottom: 1rem; color: #fff; text-align: center; }`;
+                    clonedDoc.body.appendChild(style);
+                }
             });
+
+            // Wait, the above onclone strategy with CSS requires the element to already exist but be hidden.
+            // Let's try inserting the title into the DOM (hidden), and then unhiding it in capture.
+
             const link = document.createElement('a');
             link.download = filename;
             link.href = canvas.toDataURL();
@@ -129,6 +149,11 @@ export default function Stats({ history }) {
             setExporting(false);
         }
     };
+
+    // REVISED STRATEGY:
+    // Instead of complex onclone, let's just render the title inside the ref container but hide it with CSS normally.
+    // When exporting, we can either force it visible via onclone or just rely on a special export class.
+    // Let's add the titles to the JSX directly with a 'hidden' class.
 
 
     return (
@@ -158,47 +183,55 @@ export default function Stats({ history }) {
                 <div className="chart-card glass-panel half-width">
                     <h3>Rating Distribution {hasProjectRatings ? '(Group)' : '(Global)'}</h3>
                     <div className="chart-wrapper">
-                        <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={ratingDist}>
-                                <XAxis dataKey="name" tick={{ fill: '#aaa' }} stroke="#444" />
-                                <YAxis tick={{ fill: '#aaa' }} allowDecimals={false} stroke="#444" />
-                                <Tooltip
-                                    contentStyle={{ background: '#18181b', border: '1px solid #333', borderRadius: '8px' }}
-                                    itemStyle={{ color: '#fff' }}
-                                    cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-                                />
-                                <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                                    {ratingDist.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.fill} />
-                                    ))}
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
+                        <div className="chart-scroll-container">
+                            <div className="chart-inner-wrapper">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={ratingDist}>
+                                        <XAxis dataKey="name" tick={{ fill: '#aaa' }} stroke="#444" />
+                                        <YAxis tick={{ fill: '#aaa' }} allowDecimals={false} stroke="#444" />
+                                        <Tooltip
+                                            contentStyle={{ background: '#18181b', border: '1px solid #333', borderRadius: '8px' }}
+                                            itemStyle={{ color: '#fff' }}
+                                            cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                                        />
+                                        <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                                            {ratingDist.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry.fill} />
+                                            ))}
+                                        </Bar>
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <div className="chart-card glass-panel half-width">
                     <h3>Rating Timeline</h3>
                     <div className="chart-wrapper">
-                        <ResponsiveContainer width="100%" height={300}>
-                            <LineChart data={timelineData}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
-                                <XAxis dataKey="label" tick={{ fill: '#aaa' }} stroke="#444" minTickGap={30} />
-                                <YAxis domain={[0, 5]} tick={{ fill: '#aaa' }} stroke="#444" ticks={[1, 2, 3, 4, 5]} />
-                                <Tooltip
-                                    contentStyle={{ background: '#18181b', border: '1px solid #333', borderRadius: '8px' }}
-                                    labelFormatter={(label, item) => {
-                                        const point = item[0]?.payload;
-                                        return point ? `${point.fullDate} (${point.count} albums)` : label;
-                                    }}
-                                    formatter={(value, name) => [value, name]}
-                                />
-                                {hasProjectRatings && (
-                                    <Line type="monotone" dataKey="rating" stroke="#fbbf24" strokeWidth={3} dot={{ r: 4, fill: '#fbbf24' }} name="Group Rating" />
-                                )}
-                                <Line type="monotone" dataKey="globalRating" stroke={hasProjectRatings ? "#2563eb" : "#fbbf24"} strokeWidth={hasProjectRatings ? 2 : 3} dot={false} strokeOpacity={hasProjectRatings ? 0.5 : 1} name="Global Rating" />
-                            </LineChart>
-                        </ResponsiveContainer>
+                        <div className="chart-scroll-container">
+                            <div className="chart-inner-wrapper">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <LineChart data={timelineData}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
+                                        <XAxis dataKey="label" tick={{ fill: '#aaa' }} stroke="#444" minTickGap={30} />
+                                        <YAxis domain={[0, 5]} tick={{ fill: '#aaa' }} stroke="#444" ticks={[1, 2, 3, 4, 5]} />
+                                        <Tooltip
+                                            contentStyle={{ background: '#18181b', border: '1px solid #333', borderRadius: '8px' }}
+                                            labelFormatter={(label, item) => {
+                                                const point = item[0]?.payload;
+                                                return point ? `${point.fullDate} (${point.count} albums)` : label;
+                                            }}
+                                            formatter={(value, name) => [value, name]}
+                                        />
+                                        {hasProjectRatings && (
+                                            <Line type="monotone" dataKey="rating" stroke="#fbbf24" strokeWidth={3} dot={{ r: 4, fill: '#fbbf24' }} name="Group Rating" />
+                                        )}
+                                        <Line type="monotone" dataKey="globalRating" stroke={hasProjectRatings ? "#2563eb" : "#fbbf24"} strokeWidth={hasProjectRatings ? 2 : 3} dot={false} strokeOpacity={hasProjectRatings ? 0.5 : 1} name="Global Rating" />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -217,6 +250,8 @@ export default function Stats({ history }) {
                         </div>
 
                         <div className="stats-collage-grid" ref={fiveStarRef}>
+                            <h2 className="export-title">Loved (5 Stars)</h2>
+                            <h2 className="export-title">Loved (5 Stars)</h2>
                             {fiveStarAlbums.length === 0 && <p className="empty-text">No 5-star albums yet.</p>}
                             {fiveStarAlbums.map((a, i) => (
                                 <div key={i} className="stats-collage-item">
@@ -241,6 +276,8 @@ export default function Stats({ history }) {
                         </div>
 
                         <div className="stats-collage-grid" ref={oneStarRef}>
+                            <h2 className="export-title">Disliked (1 Star)</h2>
+                            <h2 className="export-title">Disliked (1 Star)</h2>
                             {oneStarAlbums.length === 0 && <p className="empty-text">No 1-star albums yet.</p>}
                             {oneStarAlbums.map((a, i) => (
                                 <div key={i} className="stats-collage-item">
@@ -258,17 +295,21 @@ export default function Stats({ history }) {
             )}
 
             <div className="charts-grid">
-                <div className="chart-card glass-panel full-width-chart">
+                <div className="chart-card glass-panel centered-chart-card">
                     <h3>Top Genres</h3>
                     <div className="chart-wrapper">
-                        <ResponsiveContainer width="100%" height={250}>
-                            <BarChart data={genreData} layout="vertical" margin={{ left: 40 }}>
-                                <XAxis type="number" hide />
-                                <YAxis dataKey="name" type="category" width={100} tick={{ fill: '#aaa', fontSize: 12 }} stroke="#444" />
-                                <Tooltip contentStyle={{ background: '#18181b', border: '1px solid #333' }} itemStyle={{ color: '#fff' }} />
-                                <Bar dataKey="value" radius={[0, 4, 4, 0]} fill="#0891b2" />
-                            </BarChart>
-                        </ResponsiveContainer>
+                        <div className="chart-scroll-container">
+                            <div className="chart-inner-wrapper">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={genreData} layout="vertical" margin={{ left: 40 }}>
+                                        <XAxis type="number" hide />
+                                        <YAxis dataKey="name" type="category" width={100} tick={{ fill: '#aaa', fontSize: 12 }} stroke="#444" />
+                                        <Tooltip contentStyle={{ background: '#18181b', border: '1px solid #333' }} itemStyle={{ color: '#fff' }} />
+                                        <Bar dataKey="value" radius={[0, 4, 4, 0]} fill="#0891b2" />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -282,6 +323,8 @@ export default function Stats({ history }) {
                 </div>
 
                 <div className="album-wall" ref={wallRef}>
+                    <h2 className="export-title">My Album Journey</h2>
+                    <h2 className="export-title">My Album Journey</h2>
                     {history.map((album, i) => (
                         <div key={i} className="wall-item">
                             <img

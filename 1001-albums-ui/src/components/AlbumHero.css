@@ -290,67 +290,148 @@
 @media (max-width: 768px) {
     .album-scene {
         height: auto;
-        min-height: 500px;
-        /* Let it grow */
+        min-height: 550px;
+        margin-bottom: 2rem;
     }
 
     .album-card {
-        height: auto;
-        min-height: 100%;
+        height: 100%;
+        min-height: 550px;
+        transform-style: preserve-3d !important;
+        transition: transform 0.8s cubic-bezier(0.4, 0.0, 0.2, 1);
     }
 
-    .album-face {
-        position: relative;
-        /* Unlock absolute positioning on mobile to allow flow */
-        height: auto;
-        min-height: 500px;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.5s;
+    .album-card.is-flipped {
+        transform: rotateY(180deg) !important;
     }
 
-    /* Show active face, hide inactive (fake flip) for better mobile flow? 
-       Actually, preserving 3d flip on mobile is fine, but height is tricky.
-       Let's keep absolute but ensure min-height matches content.
-    */
     .album-face {
         position: absolute;
+        width: 100%;
+        height: 100%;
+        backface-visibility: hidden;
+        top: 0;
+        left: 0;
         opacity: 1;
         pointer-events: auto;
+        transition: none;
+        padding: 2rem 1.5rem;
+        /* Reduced padding */
+    }
+
+    .album-front {
+        display: flex;
+        /* Always display */
+    }
+
+    .album-back {
+        transform: rotateY(180deg);
+        display: flex !important;
+        padding-top: 3.5rem;
+        /* More top padding for back button */
     }
 
     .hero-content {
         flex-direction: column;
         align-items: center;
         text-align: center;
-        gap: 2rem;
+        gap: 1.2rem;
+        /* Reduced gap */
     }
 
     .album-info {
         width: 100%;
         align-items: center;
+        gap: 0.3rem;
+        /* Tighter vertical spacing */
     }
 
     .cover-container {
-        width: 250px;
-        height: 250px;
+        width: 220px;
+        /* Smaller cover */
+        height: 220px;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
     }
 
     .album-title {
-        font-size: 2rem;
+        font-size: 1.8rem;
+        /* Smaller title */
+        word-break: break-word;
+        line-height: 1.2;
+        margin-bottom: 0.2rem;
+    }
+
+    .album-artist {
+        font-size: 1.1rem;
+        /* Smaller artist */
+        margin-bottom: 0.5rem;
+    }
+
+    .label {
+        font-size: 0.7rem;
+        margin-bottom: 0.3rem;
     }
 
     .meta-tags {
         justify-content: center;
+        margin-bottom: 1rem;
+        gap: 0.3rem;
+    }
+
+    .tag {
+        font-size: 0.75rem;
+        padding: 0.2rem 0.6rem;
     }
 
     .actions {
         justify-content: center;
         width: 100%;
+        gap: 0.6rem;
     }
 
+    /* Compact Buttons */
     .action-btn {
         width: 100%;
+        max-width: 260px;
+        /* Slightly narrower */
         justify-content: center;
+        padding: 0.6rem 1rem;
+        /* Less padding */
+        font-size: 0.9rem;
+        /* Smaller text */
+    }
+
+    .flip-btn {
+        bottom: 0;
+        right: 0;
+        transform: translate(50%, 50%);
+        position: absolute;
+        width: 36px;
+        /* Smaller flip button */
+        height: 36px;
+    }
+
+    .cover-container .flip-btn {
+        right: 10px;
+        bottom: 10px;
+        transform: none;
+    }
+
+    .flip-back-btn {
+        z-index: 20;
+        top: 15px;
+        left: 15px;
+        font-size: 0.85rem;
+    }
+
+    .back-content h2 {
+        font-size: 1.5rem;
+        margin-bottom: 0.8rem;
+    }
+
+    .summary-scroll {
+        font-size: 0.95rem;
+        /* Smaller summary text */
+        margin-bottom: 1.5rem;
     }
 }
