@@ -5,11 +5,23 @@ import './History.css';
 export default function History({ history }) {
     const [viewMode, setViewMode] = useState('grid');
     const [sortOrder, setSortOrder] = useState('recent'); // 'recent' or 'oldest'
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedAlbum, setSelectedAlbum] = useState(null);
 
     if (!history || history.length === 0) return null;
 
+    // Filter based on search term
+    const filteredHistory = history.filter(item => {
+        if (!searchTerm) return true;
+        const lowerSearch = searchTerm.toLowerCase();
+        return (
+            item.name.toLowerCase().includes(lowerSearch) ||
+            item.artist.toLowerCase().includes(lowerSearch)
+        );
+    });
+
     // Derived sorted state
-    const sortedHistory = [...history].sort((a, b) => {
+    const sortedHistory = [...filteredHistory].sort((a, b) => {
         const dateA = new Date(a.generatedAt);
         const dateB = new Date(b.generatedAt);
         return sortOrder === 'recent' ? dateB - dateA : dateA - dateB;
@@ -28,8 +40,6 @@ export default function History({ history }) {
         // Try Spotify native URI first
         if (album.spotifyId) {
             window.location.href = `spotify:album:${album.spotifyId}`;
-            // Fallback to web link if needed (often handled by browser asking to open app)
-            // setTimeout(() => window.open(`https://open.spotify.com/album/${album.spotifyId}`, '_blank'), 500);
         } else if (album.appleMusicId) {
             // Apple Music deeplink scheme usually starts with music://
             window.location.href = `music://music.apple.com/album/${album.appleMusicId}`;
@@ -43,7 +53,17 @@ export default function History({ history }) {
             <div className="history-header-row">
                 <div className="header-info">
                     <h3>History</h3>
-                    <span className="count-badge">{history.length} albums</span>
+                    <span className="count-badge">{filteredHistory.length} albums</span>
+                </div>
+
+                <div className="search-container">
+                    <input
+                        type="text"
+                        className="search-input"
+                        placeholder="Search albums or artists..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
                 </div>
 
                 <div className="view-toggle">
@@ -77,7 +97,11 @@ export default function History({ history }) {
                 /* GRID VIEW */
                 <div className="history-grid">
                     {sortedHistory.map((item, index) => (
-                        <div key={index} className="history-card glass-panel">
+                        <div
+                            key={index}
+                            className="history-card glass-panel"
+                            onClick={() => setSelectedAlbum(item)}
+                        >
                             <div className="history-cover-wrapper">
                                 <img
                                     src={item.images?.[0]?.url || item.image || 'https://via.placeholder.com/150'}
@@ -160,6 +184,73 @@ export default function History({ history }) {
                             </div>
                         </div>
                     ))}
+                </div>
+            )}
+
+            {/* ALBUM DETAILS MODAL */}
+            {selectedAlbum && (
+                <div className="modal-overlay" onClick={() => setSelectedAlbum(null)}>
+                    <div className="modal-content glass-panel" onClick={e => e.stopPropagation()}>
+                        <button className="close-modal-btn" onClick={() => setSelectedAlbum(null)}>×</button>
+
+                        <div className="modal-body">
+                            <div className="modal-cover-section">
+                                <img
+                                    src={selectedAlbum.images?.[0]?.url || selectedAlbum.image}
+                                    alt={selectedAlbum.name}
+                                    className="modal-cover"
+                                />
+                                <div className="modal-actions">
+                                    <button className="play-btn-large" onClick={() => handlePlay(selectedAlbum)}>
+                                        <Play fill="currentColor" size={24} /> Play Album
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="modal-info-section">
+                                <h2 className="modal-title">{selectedAlbum.name}</h2>
+                                <h3 className="modal-artist">{selectedAlbum.artist}</h3>
+
+                                <div className="modal-meta-badges">
+                                    <span className="modal-badge">{selectedAlbum.releaseDate}</span>
+                                    {selectedAlbum.genres?.map(g => (
+                                        <span key={g} className="modal-badge genre">{g}</span>
+                                    ))}
+                                </div>
+
+                                <div className="modal-ratings-row">
+                                    <div className="rating-box global">
+                                        <span className="rating-label">Global Rating</span>
+                                        <span className="rating-value">{selectedAlbum.globalRating || '-'}</span>
+                                    </div>
+                                    <div className="rating-box user">
+                                        <span className="rating-label">My Rating</span>
+                                        <span className="rating-value">
+                                            {selectedAlbum.rating && !isNaN(selectedAlbum.rating) ? selectedAlbum.rating : '-'}
+                                            <span className="star">★</span>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="modal-section-divider"></div>
+
+                                {selectedAlbum.review ? (
+                                    <div className="modal-review">
+                                        <h4>My Review</h4>
+                                        <p>"{selectedAlbum.review}"</p>
+                                    </div>
+                                ) : (
+                                    <div className="modal-review empty">
+                                        <p>No review added for this album.</p>
+                                    </div>
+                                )}
+
+                                <div className="modal-footer-meta">
+                                    <small>Added to history on {formatDate(selectedAlbum.generatedAt)}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
