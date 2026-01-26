@@ -33,4 +33,34 @@ export async function getWikiSummary(wikiUrl) {
     console.warn("Failed to fetch wiki summary", error);
     return null;
   }
+  return null;
+}
+
+
+// Cache for all album stats to avoid re-fetching
+let cachedStats = null;
+
+export async function getAlbumStats(albumName) {
+  if (!albumName) return null;
+
+  try {
+    if (!cachedStats) {
+      const response = await fetch(`${BASE_URL}/albums/stats`);
+      if (response.ok) {
+        cachedStats = await response.json();
+      }
+    }
+
+    if (cachedStats && cachedStats.albums) {
+      // Find album by name (case-insensitive)
+      const found = cachedStats.albums.find(a =>
+        a.name.toLowerCase() === albumName.toLowerCase()
+      );
+      return found || null;
+    }
+    return null;
+  } catch (error) {
+    console.warn("Failed to fetch album stats", error);
+    return null;
+  }
 }
