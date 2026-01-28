@@ -1,12 +1,61 @@
-import React, { useState } from 'react';
-import { LayoutGrid, List as ListIcon, Play, ArrowDownUp } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { LayoutGrid, List as ListIcon, Play, ArrowDownUp, Music, ChevronLeft, ChevronRight } from 'lucide-react';
+import { getSimilarAlbums } from '../api';
 import './History.css';
 
-export default function History({ history }) {
+export default function History({ history, musicPlatform }) {
     const [viewMode, setViewMode] = useState('grid');
     const [sortOrder, setSortOrder] = useState('recent'); // 'recent' or 'oldest'
+
+    // ... (keep existing state) ...
+
+    const getPlatformLink = (alb) => {
+        const query = encodeURIComponent(`${alb.name} ${alb.artist}`);
+        if (musicPlatform === 'apple') {
+            return `https://music.apple.com/us/search?term=${query}`;
+        }
+        // Default to Spotify search if no specific ID
+        return `https://open.spotify.com/search/${query}`;
+    };
+
+    // ... (rest of component) ...
+
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedAlbum, setSelectedAlbum] = useState(null);
+
+    // Similar Albums State for Modal
+    const [similarAlbums, setSimilarAlbums] = useState(null);
+    const [loadingSimilar, setLoadingSimilar] = useState(false);
+    const [activeTab, setActiveTab] = useState('details'); // 'details' | 'similar'
+    const scrollRef = useRef(null);
+
+    // Reset similar albums when modal is closed or album changes
+    useEffect(() => {
+        setSimilarAlbums(null);
+        setLoadingSimilar(false);
+        setActiveTab('details'); // Reset tab
+    }, [selectedAlbum]);
+
+    const handleFetchSimilar = () => {
+        if (!selectedAlbum) return;
+        setLoadingSimilar(true);
+        getSimilarAlbums(selectedAlbum.name, selectedAlbum.artist)
+            .then(data => setSimilarAlbums(data || []))
+            .catch(err => console.error(err))
+            .finally(() => setLoadingSimilar(false));
+    };
+
+    const handleTabChange = (tab) => {
+        setActiveTab(tab);
+        if (tab === 'similar' && !similarAlbums && !loadingSimilar) {
+            handleFetchSimilar();
+        }
+    };
+
+
+
+
+
 
     if (!history || history.length === 0) return null;
 
@@ -20,7 +69,7 @@ export default function History({ history }) {
         );
     });
 
-    // Derived sorted state
+    // derived sorted state
     const sortedHistory = [...filteredHistory].sort((a, b) => {
         const dateA = new Date(a.generatedAt);
         const dateB = new Date(b.generatedAt);
@@ -218,36 +267,95 @@ export default function History({ history }) {
                                     ))}
                                 </div>
 
-                                <div className="modal-ratings-row">
-                                    <div className="rating-box global">
-                                        <span className="rating-label">Global Rating</span>
-                                        <span className="rating-value">{selectedAlbum.globalRating || '-'}</span>
-                                    </div>
-                                    <div className="rating-box user">
-                                        <span className="rating-label">My Rating</span>
-                                        <span className="rating-value">
-                                            {selectedAlbum.rating && !isNaN(selectedAlbum.rating) ? selectedAlbum.rating : '-'}
-                                            <span className="star">★</span>
-                                        </span>
-                                    </div>
+                                {/* TABS */}
+                                <div className="modal-tabs">
+                                    <button
+                                        className={`tab-btn ${activeTab === 'details' ? 'active' : ''}`}
+                                        onClick={() => handleTabChange('details')}
+                                    >
+                                        <ListIcon size={16} /> Details
+                                    </button>
+                                    <button
+                                        className={`tab-btn ${activeTab === 'similar' ? 'active' : ''}`}
+                                        onClick={() => handleTabChange('similar')}
+                                    >
+                                        <Music size={16} /> Similar Albums
+                                    </button>
                                 </div>
-
                                 <div className="modal-section-divider"></div>
 
-                                {selectedAlbum.review ? (
-                                    <div className="modal-review">
-                                        <h4>My Review</h4>
-                                        <p>"{selectedAlbum.review}"</p>
-                                    </div>
-                                ) : (
-                                    <div className="modal-review empty">
-                                        <p>No review added for this album.</p>
+                                {activeTab === 'details' && (
+                                    <div className="tab-content animate-fade-in">
+                                        <div className="modal-ratings-row">
+                                            <div className="rating-box global">
+                                                <span className="rating-label">Global Rating</span>
+                                                <span className="rating-value">{selectedAlbum.globalRating || '-'}</span>
+                                            </div>
+                                            <div className="rating-box user">
+                                                <span className="rating-label">My Rating</span>
+                                                <span className="rating-value">
+                                                    {selectedAlbum.rating && !isNaN(selectedAlbum.rating) ? selectedAlbum.rating : '-'}
+                                                    <span className="star">★</span>
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {selectedAlbum.review ? (
+                                            <div className="modal-review">
+                                                <h4>My Review</h4>
+                                                <p>"{selectedAlbum.review}"</p>
+                                            </div>
+                                        ) : (
+                                            <div className="modal-review empty">
+                                                <p>No review added for this album.</p>
+                                            </div>
+                                        )}
+
+                                        <div className="modal-footer-meta">
+                                            <small>Added to history on {formatDate(selectedAlbum.generatedAt)}</small>
+                                        </div>
                                     </div>
                                 )}
 
-                                <div className="modal-footer-meta">
-                                    <small>Added to history on {formatDate(selectedAlbum.generatedAt)}</small>
-                                </div>
+
+                                {/* SIMILAR TAB CONTENT */}
+                                {activeTab === 'similar' && (
+                                    <div className="tab-content animate-fade-in modal-similar-section">
+                                        {loadingSimilar && <p className="loading-text">Finding similar albums...</p>}
+
+                                        {similarAlbums && similarAlbums.length > 0 && (
+                                            <div className="similar-grid-container">
+                                                <div className="similar-grid">
+                                                    {similarAlbums.map(alb => (
+                                                        <a
+                                                            key={alb.id}
+                                                            href={getPlatformLink(alb)}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="similar-card"
+                                                            title={`Listen to ${alb.name} on ${musicPlatform === 'apple' ? 'Apple Music' : 'Spotify'}`}
+                                                        >
+                                                            <div className="card-image-wrapper">
+                                                                <img src={alb.image} alt={alb.name} />
+                                                                <div className="play-overlay">
+                                                                    <Play size={32} fill="white" stroke="white" />
+                                                                </div>
+                                                            </div>
+                                                            <div className="similar-info">
+                                                                <p className="s-title">{alb.name}</p>
+                                                                <p className="s-artist">{alb.artist}</p>
+                                                            </div>
+                                                        </a>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {similarAlbums && similarAlbums.length === 0 && !loadingSimilar && (
+                                            <p className="empty-text">No recommendations found.</p>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>

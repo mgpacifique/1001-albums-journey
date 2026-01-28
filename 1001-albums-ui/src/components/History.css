@@ -813,3 +813,213 @@
         margin: 10px 0;
     }
 }
+
+/* SIMILAR ALBUMS SECTION IN MODAL */
+.modal-tabs {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 0px;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    color: #888;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+}
+
+.tab-btn:hover {
+    color: #ddd;
+}
+
+.tab-btn.active {
+    color: white;
+    border-bottom-color: var(--accent-color);
+}
+
+.modal-similar-section {
+    margin-top: 1rem;
+}
+
+.similar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.similar-header h4 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #ddd;
+}
+
+.load-similar-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #eee;
+    padding: 6px 14px;
+    border-radius: 100px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.load-similar-btn:hover {
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+    color: white;
+}
+
+.loading-text {
+    font-style: italic;
+    color: #888;
+    font-size: 0.9rem;
+}
+
+/* SIMILAR GRID LAYOUT */
+.similar-grid-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.similar-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    padding: 0.2rem 0;
+    width: 100%;
+    max-width: 280px;
+    /* Constrained width for compact 2x3 layout */
+}
+
+/* CUSTOM SCROLLBAR FOR MODAL */
+.modal-content::-webkit-scrollbar,
+.modal-body::-webkit-scrollbar {
+    width: 6px;
+    /* Thin scrollbar */
+}
+
+.modal-content::-webkit-scrollbar-track,
+.modal-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.modal-content::-webkit-scrollbar-thumb,
+.modal-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover,
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.4);
+}
+
+.similar-card {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    /* Full width of grid cell */
+    padding: 0.0rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    transition: all 0.2s ease;
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+}
+
+.similar-card:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.similar-card img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-bottom: 0;
+    /* Handled by wrapper */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    display: block;
+}
+
+.card-image-wrapper {
+    position: relative;
+    width: 100%;
+    margin-bottom: 0.5rem;
+    /* Add spacing below image */
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.play-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    backdrop-filter: blur(2px);
+}
+
+.similar-card:hover .play-overlay {
+    opacity: 1;
+}
+
+.play-overlay svg {
+    transform: scale(0.8);
+    transition: transform 0.2s;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+.similar-card:hover .play-overlay svg {
+    transform: scale(1);
+}
+
+/* Info styles remain the same... */
+.similar-info {
+    font-size: 0.8rem;
+    text-align: center;
+}
+
+.s-title {
+    font-weight: bold;
+    margin: 0;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #fff;
+    font-size: 0.85rem;
+}
+
+.s-artist {
+    margin: 0;
+    font-size: 0.75rem;
+    color: #ddd;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

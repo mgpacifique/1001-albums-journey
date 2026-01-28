@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { ExternalLink, Music, RotateCcw, Info, Star } from 'lucide-react';
-import { getWikiSummary, getAlbumStats } from '../api';
+import React, { useState, useEffect, useRef } from 'react';
+import { ExternalLink, Music, RotateCcw, Info, Star, ChevronLeft, ChevronRight, Play } from 'lucide-react';
+import { getWikiSummary, getAlbumStats, getSimilarAlbums } from '../api';
 import './AlbumHero.css';
 
 export default function AlbumHero({ album, musicPlatform }) {
@@ -13,6 +13,25 @@ export default function AlbumHero({ album, musicPlatform }) {
     const [realStats, setRealStats] = useState(null);
     const [loadingStats, setLoadingStats] = useState(false);
 
+    // Similar Albums State
+    const [similarAlbums, setSimilarAlbums] = useState(null);
+    const [loadingSimilar, setLoadingSimilar] = useState(false);
+
+    // Scroll Ref for Carousel
+    const scrollRef = useRef(null);
+
+    const scrollLeft = () => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollBy({ left: -200, behavior: 'smooth' });
+        }
+    };
+
+    const scrollRight = () => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollBy({ left: 200, behavior: 'smooth' });
+        }
+    };
+
     useEffect(() => {
         // Reset state on new album (Partial reset, don't clear summary if it's stored?)
         // Actually best to reset all
@@ -20,6 +39,8 @@ export default function AlbumHero({ album, musicPlatform }) {
         setBackView('summary');
         setSummary(null);
         setRealStats(null);
+        setSimilarAlbums(null);
+        if (scrollRef.current) scrollRef.current.scrollLeft = 0; // Reset scroll
 
         if (album?.wikipediaUrl) {
             setLoadingSummary(true);
@@ -44,6 +65,17 @@ export default function AlbumHero({ album, musicPlatform }) {
                 .finally(() => setLoadingStats(false));
         }
     }, [backView, album, realStats, loadingStats]);
+
+    // Fetch Similar Albums when view changes
+    useEffect(() => {
+        if (backView === 'similar' && similarAlbums === null && !loadingSimilar && album?.name) {
+            setLoadingSimilar(true);
+            getSimilarAlbums(album.name, album.artist)
+                .then(data => setSimilarAlbums(data || []))
+                .catch(err => console.error(err))
+                .finally(() => setLoadingSimilar(false));
+        }
+    }, [backView, album, similarAlbums, loadingSimilar]);
 
     if (!album) return null;
 
@@ -97,7 +129,7 @@ export default function AlbumHero({ album, musicPlatform }) {
                                 {musicPlatform === 'apple' && album.appleMusicId ? (
                                     <button
                                         onClick={() => {
-                                            window.location.href = `music://music.apple.com/album/${album.appleMusicId}`;
+                                            window.location.href = `https://music.apple.com/us/album/${album.appleMusicId}`;
                                         }}
                                         className="action-btn apple"
                                         style={{ background: '#fa243c', color: 'white' }}
@@ -142,7 +174,7 @@ export default function AlbumHero({ album, musicPlatform }) {
                     </button>
 
                     <div className="back-content">
-                        {backView === 'summary' ? (
+                        {backView === 'summary' && (
                             <div className="fade-enter">
                                 <h2>About {album.name}</h2>
                                 <div className="summary-scroll">
@@ -172,10 +204,17 @@ export default function AlbumHero({ album, musicPlatform }) {
                                     >
                                         <Star size={20} /> Reviews
                                     </button>
+                                    <button
+                                        className="action-btn secondary"
+                                        onClick={() => setBackView('similar')}
+                                    >
+                                        <Music size={20} /> Similar
+                                    </button>
                                 </div>
                             </div>
-                        ) : (
-                            /* REVIEWS VIEW */
+                        )}
+
+                        {backView === 'reviews' && (
                             <div className="fade-enter">
                                 <h2>Reviews & Ratings</h2>
                                 <div className="reviews-content-scroll">
@@ -220,7 +259,6 @@ export default function AlbumHero({ album, musicPlatform }) {
                                                         count = realStats.votesByGrade[String(stars)] || 0;
                                                         percentage = realStats.votes > 0 ? (count / realStats.votes) * 100 : 0;
                                                     }
-                                                    // No mock fallback to ensure accuracy as requested
 
                                                     return (
                                                         <div key={stars} className="dist-row">
@@ -247,6 +285,73 @@ export default function AlbumHero({ album, musicPlatform }) {
 
                                 </div>
 
+                                <div className="back-actions">
+                                    <button
+                                        className="action-btn secondary"
+                                        onClick={() => setBackView('summary')}
+                                    >
+                                        Back to Summary
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {backView === 'similar' && (
+                            <div className="fade-enter">
+                                <h2>Similar Albums</h2>
+                                <div className="similar-albums-scroll">
+                                    {loadingSimilar ? (
+                                        <div className="loading-container">
+                                            <p>Loading recommendations...</p>
+                                        </div>
+                                    ) : (similarAlbums && similarAlbums.length > 0) ? (
+                                        <div className="carousel-wrapper">
+                                            <button className="carousel-btn left" onClick={scrollLeft} aria-label="Scroll left">
+                                                <ChevronLeft size={24} />
+                                            </button>
+
+                                            <div className="hero-similar-carousel" ref={scrollRef}>
+                                                {similarAlbums.map(alb => {
+                                                    const getPlatformLink = () => {
+                                                        const query = encodeURIComponent(`${alb.name} ${alb.artist}`);
+                                                        if (musicPlatform === 'apple') {
+                                                            return `https://music.apple.com/us/search?term=${query}`;
+                                                        }
+                                                        return `https://open.spotify.com/search/${query}`;
+                                                    };
+
+                                                    return (
+                                                        <a
+                                                            key={alb.id}
+                                                            href={getPlatformLink()}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="similar-card"
+                                                            title={`Listen to ${alb.name} on ${musicPlatform === 'apple' ? 'Apple Music' : 'Spotify'}`}
+                                                        >
+                                                            <div className="card-image-wrapper">
+                                                                <img src={alb.image} alt={alb.name} />
+                                                                <div className="play-overlay">
+                                                                    <Play size={24} fill="white" stroke="white" />
+                                                                </div>
+                                                            </div>
+                                                            <div className="similar-info">
+                                                                <p className="s-title">{alb.name}</p>
+                                                                <p className="s-artist">{alb.artist}</p>
+                                                            </div>
+                                                        </a>
+                                                    );
+                                                })}
+                                            </div>
+
+                                            <button className="carousel-btn right" onClick={scrollRight} aria-label="Scroll right">
+                                                <ChevronRight size={24} />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <p className="empty-text">No recommendations found.</p>
+                                    )}
+                                </div>
                                 <div className="back-actions">
                                     <button
                                         className="action-btn secondary"

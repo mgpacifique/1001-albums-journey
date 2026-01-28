@@ -608,3 +608,194 @@
         transform: translateY(0);
     }
 }
+
+/* Similar Albums View */
+/* Similar Albums View */
+.similar-albums-scroll {
+    /* Allow horizontal scroll container to fit content */
+    width: 100%;
+    overflow: hidden;
+    /* Hide vertical overflow */
+    margin: 1rem 0;
+}
+
+/* ... (keep similar-grid styles here) ... */
+
+
+/* Hide scrollbar for cleaner look since we have buttons */
+/* Hide scrollbar for cleaner look since we have buttons */
+.hero-similar-carousel::-webkit-scrollbar {
+    height: 0px;
+    width: 0px;
+}
+
+
+/* Carousel Wrapper for Buttons */
+.carousel-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 2;
+    transition: all 0.2s;
+    backdrop-filter: blur(4px);
+}
+
+.carousel-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-btn.left {
+    left: 0;
+}
+
+.carousel-btn.right {
+    right: 0;
+}
+
+/* Horizontal Scroll (Carousel) Layout */
+.hero-similar-carousel {
+    /* ... existing flex styles ... */
+    display: flex;
+    overflow-x: auto;
+    gap: 1rem;
+    padding: 0.5rem 0.2rem 1rem 0.2rem;
+    /* Bottom padding for scrollbar space */
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    /* Momentum scrolling on iOS */
+}
+
+.similar-card {
+    display: flex;
+    flex-direction: column;
+    min-width: 130px;
+    /* Fixed width for consistent items */
+    width: 130px;
+    padding: 0.5rem;
+    border-radius: 12px;
+    /* Softer corners */
+    background: rgba(255, 255, 255, 0.05);
+    /* Lighter background */
+    transition: all 0.2s ease;
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+}
+
+.similar-card:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.similar-card img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-bottom: 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    display: block;
+}
+
+.card-image-wrapper {
+    position: relative;
+    width: 100%;
+    margin-bottom: 0.5rem;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.play-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    backdrop-filter: blur(2px);
+}
+
+.similar-card:hover .play-overlay {
+    opacity: 1;
+}
+
+.play-overlay svg {
+    transform: scale(0.8);
+    transition: transform 0.2s;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+.similar-card:hover .play-overlay svg {
+    transform: scale(1);
+}
+
+.similar-info {
+    font-size: 0.8rem;
+    text-align: center;
+}
+
+.s-title {
+    font-weight: bold;
+    margin: 0;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #fff;
+}
+
+.s-artist {
+    margin: 0;
+    font-size: 0.7rem;
+    color: #ddd;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.loading-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 150px;
+    color: #ccc;
+    font-style: italic;
+}
+
+/* Scrollbar styling for similar albums */
+.similar-albums-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+
+.similar-albums-scroll::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.similar-albums-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
