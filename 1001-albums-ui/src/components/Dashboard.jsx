@@ -1,11 +1,14 @@
 import React from 'react';
 import AlbumHero from './AlbumHero';
-import { Star, Disc, Calendar, Music, Radio } from 'lucide-react';
+import { Star, Disc, Calendar, Music } from 'lucide-react';
+import { getPlatformConfig } from '../utils/streaming';
 import './Dashboard.css';
 
-export default function Dashboard({ data, musicPlatform, onTogglePlatform }) {
+export default function Dashboard({ data, musicPlatform, streamingMode, onOpenSettings }) {
 
     if (!data) return null;
+
+    const platformConfig = getPlatformConfig(musicPlatform);
 
     // --- Calcs for Project Overview ---
     const totalAlbums = 1089; // Updated per user request (book editions added up)
@@ -125,26 +128,30 @@ export default function Dashboard({ data, musicPlatform, onTogglePlatform }) {
                         </div>
 
                         {/* Platform Switcher Card */}
-                        <div className="overview-card glass-panel platform-card">
+                        <div className="overview-card glass-panel platform-card" onClick={onOpenSettings} style={{ cursor: 'pointer' }}>
                             <div className="card-icon"><Music size={24} /></div>
-                            <h3>Music Platform</h3>
-                            <div className="platform-toggle">
-                                <button
-                                    className={`platform-btn ${musicPlatform === 'spotify' ? 'active spotify' : ''}`}
-                                    onClick={onTogglePlatform}
-                                    disabled={musicPlatform === 'spotify'}
-                                >
-                                    <Radio size={18} /> Spotify
-                                </button>
-                                <button
-                                    className={`platform-btn ${musicPlatform === 'apple' ? 'active apple' : ''}`}
-                                    onClick={onTogglePlatform}
-                                    disabled={musicPlatform === 'apple'}
-                                >
-                                    <Radio size={18} /> Apple
-                                </button>
+                            <h3>Music Service</h3>
+                            <div className="platform-display" style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                marginTop: '0.5rem',
+                                padding: '0.5rem',
+                                background: 'rgba(255,255,255,0.1)',
+                                borderRadius: '8px'
+                            }}>
+                                <div style={{
+                                    width: '12px',
+                                    height: '12px',
+                                    borderRadius: '50%',
+                                    background: platformConfig.color,
+                                    boxShadow: `0 0 8px ${platformConfig.color}`
+                                }}></div>
+                                <span style={{ fontWeight: 500 }}>{platformConfig.label}</span>
                             </div>
-                            <p className="stat-sub">Default for "Listen" buttons</p>
+                            <p className="stat-sub" style={{ marginTop: '0.5rem' }}>
+                                {streamingMode === 'app' ? 'Desktop App' : 'Web Player'}
+                            </p>
                         </div>
 
                     </div>

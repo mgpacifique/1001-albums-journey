@@ -1,9 +1,9 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, History, BarChart3, LogOut, Disc } from 'lucide-react';
+import { LayoutDashboard, History, BarChart3, LogOut, Disc, Settings } from 'lucide-react';
 import './Sidebar.css';
 
-export default function Sidebar({ onLogout }) {
+export default function Sidebar({ onLogout, onOpenSettings }) {
     return (
         <nav className="sidebar glass-panel">
             <div className="sidebar-header">
@@ -29,6 +29,10 @@ export default function Sidebar({ onLogout }) {
             </div>
 
             <div className="sidebar-footer">
+                <button onClick={onOpenSettings} className="nav-item">
+                    <Settings size={20} />
+                    <span>Settings</span>
+                </button>
                 <button onClick={onLogout} className="nav-item logout-btn">
                     <LogOut size={20} />
                     <span>Logout</span>

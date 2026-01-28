@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ExternalLink, Music, RotateCcw, Info, Star, ChevronLeft, ChevronRight, Play } from 'lucide-react';
 import { getWikiSummary, getAlbumStats, getSimilarAlbums } from '../api';
+import { getStreamingLink, getPlatformConfig } from '../utils/streaming';
 import './AlbumHero.css';
 
-export default function AlbumHero({ album, musicPlatform }) {
+export default function AlbumHero({ album, musicPlatform, streamingMode }) {
     const [isFlipped, setIsFlipped] = useState(false);
     const [summary, setSummary] = useState(null);
     const [loadingSummary, setLoadingSummary] = useState(false);
@@ -125,27 +126,25 @@ export default function AlbumHero({ album, musicPlatform }) {
                                     </div>
                                 )}
 
-                                {/* DYNAMIC LISTEN BUTTON */}
-                                {musicPlatform === 'apple' && album.appleMusicId ? (
-                                    <button
-                                        onClick={() => {
-                                            window.location.href = `https://music.apple.com/us/album/${album.appleMusicId}`;
-                                        }}
-                                        className="action-btn apple"
-                                        style={{ background: '#fa243c', color: 'white' }}
-                                    >
-                                        <Music size={20} /> Listen on Apple
-                                    </button>
-                                ) : (album.spotifyId && (
-                                    <button
-                                        onClick={() => {
-                                            window.location.href = `spotify:album:${album.spotifyId}`;
-                                        }}
-                                        className="action-btn spotify"
-                                    >
-                                        <Music size={20} /> Listen on Spotify
-                                    </button>
-                                ))}
+                                {/* DYNAMIC LISTEN BUTTON - Supports all platforms */}
+                                <button
+                                    onClick={() => {
+                                        const link = getStreamingLink(album, musicPlatform, streamingMode);
+                                        if (link.startsWith('http')) {
+                                            window.open(link, '_blank');
+                                        } else {
+                                            window.location.href = link;
+                                        }
+                                    }}
+                                    className={`action-btn ${musicPlatform}`}
+                                    style={{
+                                        background: getPlatformConfig(musicPlatform).color,
+                                        color: '#fff',
+                                        border: 'none'
+                                    }}
+                                >
+                                    <Music size={20} /> Listen on {getPlatformConfig(musicPlatform).label}
+                                </button>
                                 <button
                                     className="action-btn secondary"
                                     onClick={() => setIsFlipped(true)}
@@ -312,22 +311,18 @@ export default function AlbumHero({ album, musicPlatform }) {
 
                                             <div className="hero-similar-carousel" ref={scrollRef}>
                                                 {similarAlbums.map(alb => {
-                                                    const getPlatformLink = () => {
-                                                        const query = encodeURIComponent(`${alb.name} ${alb.artist}`);
-                                                        if (musicPlatform === 'apple') {
-                                                            return `https://music.apple.com/us/search?term=${query}`;
-                                                        }
-                                                        return `https://open.spotify.com/search/${query}`;
-                                                    };
+                                                    const config = getPlatformConfig(musicPlatform);
+                                                    const link = getStreamingLink(alb, musicPlatform, streamingMode);
+                                                    const isWeb = link.startsWith('http');
 
                                                     return (
                                                         <a
                                                             key={alb.id}
-                                                            href={getPlatformLink()}
-                                                            target="_blank"
+                                                            href={link}
+                                                            target={isWeb ? "_blank" : "_self"}
                                                             rel="noopener noreferrer"
                                                             className="similar-card"
-                                                            title={`Listen to ${alb.name} on ${musicPlatform === 'apple' ? 'Apple Music' : 'Spotify'}`}
+                                                            title={`Listen to ${alb.name} on ${config.label}`}
                                                         >
                                                             <div className="card-image-wrapper">
                                                                 <img src={alb.image} alt={alb.name} />

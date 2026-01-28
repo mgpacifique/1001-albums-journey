@@ -1,22 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { LayoutGrid, List as ListIcon, Play, ArrowDownUp, Music, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getSimilarAlbums } from '../api';
+import { getStreamingLink, getPlatformConfig } from '../utils/streaming';
 import './History.css';
 
-export default function History({ history, musicPlatform }) {
+export default function History({ history, musicPlatform, streamingMode }) {
     const [viewMode, setViewMode] = useState('grid');
     const [sortOrder, setSortOrder] = useState('recent'); // 'recent' or 'oldest'
 
     // ... (keep existing state) ...
-
-    const getPlatformLink = (alb) => {
-        const query = encodeURIComponent(`${alb.name} ${alb.artist}`);
-        if (musicPlatform === 'apple') {
-            return `https://music.apple.com/us/search?term=${query}`;
-        }
-        // Default to Spotify search if no specific ID
-        return `https://open.spotify.com/search/${query}`;
-    };
+    // Removed local getPlatformLink helper in favor of utility
 
     // ... (rest of component) ...
 
@@ -326,27 +319,31 @@ export default function History({ history, musicPlatform }) {
                                         {similarAlbums && similarAlbums.length > 0 && (
                                             <div className="similar-grid-container">
                                                 <div className="similar-grid">
-                                                    {similarAlbums.map(alb => (
-                                                        <a
-                                                            key={alb.id}
-                                                            href={getPlatformLink(alb)}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="similar-card"
-                                                            title={`Listen to ${alb.name} on ${musicPlatform === 'apple' ? 'Apple Music' : 'Spotify'}`}
-                                                        >
-                                                            <div className="card-image-wrapper">
-                                                                <img src={alb.image} alt={alb.name} />
-                                                                <div className="play-overlay">
-                                                                    <Play size={32} fill="white" stroke="white" />
+                                                    {similarAlbums.map(alb => {
+                                                        const link = getStreamingLink(alb, musicPlatform, streamingMode);
+                                                        const isWeb = link.startsWith('http');
+                                                        return (
+                                                            <a
+                                                                key={alb.id}
+                                                                href={link}
+                                                                target={isWeb ? "_blank" : "_self"}
+                                                                rel="noopener noreferrer"
+                                                                className="similar-card"
+                                                                title={`Listen to ${alb.name} on ${getPlatformConfig(musicPlatform).label}`}
+                                                            >
+                                                                <div className="card-image-wrapper">
+                                                                    <img src={alb.image} alt={alb.name} />
+                                                                    <div className="play-overlay">
+                                                                        <Play size={32} fill="white" stroke="white" />
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                            <div className="similar-info">
-                                                                <p className="s-title">{alb.name}</p>
-                                                                <p className="s-artist">{alb.artist}</p>
-                                                            </div>
-                                                        </a>
-                                                    ))}
+                                                                <div className="similar-info">
+                                                                    <p className="s-title">{alb.name}</p>
+                                                                    <p className="s-artist">{alb.artist}</p>
+                                                                </div>
+                                                            </a>
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
                                         )}

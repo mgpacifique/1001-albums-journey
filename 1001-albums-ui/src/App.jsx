@@ -9,8 +9,11 @@ import { getProject } from './api';
 
 import './App.css';
 
+import SettingsModal from './components/SettingsModal';
+import { PLATFORMS, MODES } from './utils/streaming';
+
 // Wrapper to fetch project data once and pass to children
-function ProjectLayout({ projectId, onLogout, musicPlatform, onTogglePlatform }) {
+function ProjectLayout({ projectId, onLogout, musicPlatform, streamingMode, onOpenSettings }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
 
@@ -43,21 +46,26 @@ function ProjectLayout({ projectId, onLogout, musicPlatform, onTogglePlatform })
 
   return (
     <div className="main-layout">
-      <Sidebar onLogout={onLogout} />
+      <Sidebar onLogout={onLogout} onOpenSettings={onOpenSettings} />
       <div className="content-area">
         <Routes>
           <Route path="/" element={
             <Dashboard
               data={data}
               musicPlatform={musicPlatform}
-              onTogglePlatform={onTogglePlatform}
+              streamingMode={streamingMode}
+              onOpenSettings={onOpenSettings}
             />
           } />
 
           <Route path="/history" element={
             <div className="container animate-fade-in">
               <h1>Full History</h1>
-              <History history={data.history} musicPlatform={musicPlatform} />
+              <History
+                history={data.history}
+                musicPlatform={musicPlatform}
+                streamingMode={streamingMode}
+              />
             </div>
           } />
 
@@ -74,13 +82,18 @@ function ProjectLayout({ projectId, onLogout, musicPlatform, onTogglePlatform })
 
 function App() {
   const [projectId, setProjectId] = useState(null);
-  const [musicPlatform, setMusicPlatform] = useState('spotify'); // 'spotify' or 'apple'
+  const [musicPlatform, setMusicPlatform] = useState(PLATFORMS.SPOTIFY);
+  const [streamingMode, setStreamingMode] = useState(MODES.WEB);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   useEffect(() => {
     const savedId = localStorage.getItem('1001_project_id');
     const savedPlatform = localStorage.getItem('1001_music_platform');
+    const savedMode = localStorage.getItem('1001_streaming_mode');
+
     if (savedId) setProjectId(savedId);
     if (savedPlatform) setMusicPlatform(savedPlatform);
+    if (savedMode) setStreamingMode(savedMode);
   }, []);
 
   const handleSetProject = (id) => {
@@ -93,22 +106,37 @@ function App() {
     setProjectId(null);
   };
 
-  const togglePlatform = () => {
-    const newPlatform = musicPlatform === 'spotify' ? 'apple' : 'spotify';
-    setMusicPlatform(newPlatform);
-    localStorage.setItem('1001_music_platform', newPlatform);
+  const updatePlatform = (platform) => {
+    setMusicPlatform(platform);
+    localStorage.setItem('1001_music_platform', platform);
+  };
+
+  const updateMode = (mode) => {
+    setStreamingMode(mode);
+    localStorage.setItem('1001_streaming_mode', mode);
   };
 
   return (
     <BrowserRouter>
       <div className="app-layout">
         {projectId ? (
-          <ProjectLayout
-            projectId={projectId}
-            onLogout={handleLogout}
-            musicPlatform={musicPlatform}
-            onTogglePlatform={togglePlatform}
-          />
+          <>
+            <ProjectLayout
+              projectId={projectId}
+              onLogout={handleLogout}
+              musicPlatform={musicPlatform}
+              streamingMode={streamingMode}
+              onOpenSettings={() => setIsSettingsOpen(true)}
+            />
+            <SettingsModal
+              isOpen={isSettingsOpen}
+              onClose={() => setIsSettingsOpen(false)}
+              currentPlatform={musicPlatform}
+              setPlatform={updatePlatform}
+              currentMode={streamingMode}
+              setMode={updateMode}
+            />
+          </>
         ) : (
           <Onboarding onProjectSet={handleSetProject} />
         )}
