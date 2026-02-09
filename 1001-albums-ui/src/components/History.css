@@ -893,7 +893,17 @@
 .similar-grid-container {
     width: 100%;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+}
+
+.similar-actions-row {
+    width: 100%;
+    max-width: 280px;
+    /* Match grid width */
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 10px;
 }
 
 .similar-grid {

@@ -15,7 +15,9 @@ export default function AlbumHero({ album, musicPlatform, streamingMode }) {
     const [loadingStats, setLoadingStats] = useState(false);
 
     // Similar Albums State
-    const [similarAlbums, setSimilarAlbums] = useState(null);
+    const [allSimilarCandidates, setAllSimilarCandidates] = useState([]);
+    const [visibleSimilar, setVisibleSimilar] = useState(null);
+    const [similarIndex, setSimilarIndex] = useState(0);
     const [loadingSimilar, setLoadingSimilar] = useState(false);
 
     // Scroll Ref for Carousel
@@ -33,14 +35,35 @@ export default function AlbumHero({ album, musicPlatform, streamingMode }) {
         }
     };
 
+    const handleGetMore = () => {
+        if (!allSimilarCandidates || allSimilarCandidates.length === 0) return;
+
+        let newIndex = similarIndex + 6;
+        // If we reached the end, loop back to start
+        if (newIndex >= allSimilarCandidates.length) {
+            newIndex = 0;
+        }
+
+        const nextBatch = allSimilarCandidates.slice(newIndex, newIndex + 6);
+        setVisibleSimilar(nextBatch);
+        setSimilarIndex(newIndex);
+
+        // Reset scroll position to start
+        if (scrollRef.current) scrollRef.current.scrollLeft = 0;
+    };
+
     useEffect(() => {
-        // Reset state on new album (Partial reset, don't clear summary if it's stored?)
-        // Actually best to reset all
+        // Reset state on new album
         setIsFlipped(false);
         setBackView('summary');
         setSummary(null);
         setRealStats(null);
-        setSimilarAlbums(null);
+
+        // Reset Similar Stats
+        setAllSimilarCandidates([]);
+        setVisibleSimilar(null);
+        setSimilarIndex(0);
+
         if (scrollRef.current) scrollRef.current.scrollLeft = 0; // Reset scroll
 
         if (album?.wikipediaUrl) {
@@ -69,14 +92,19 @@ export default function AlbumHero({ album, musicPlatform, streamingMode }) {
 
     // Fetch Similar Albums when view changes
     useEffect(() => {
-        if (backView === 'similar' && similarAlbums === null && !loadingSimilar && album?.name) {
+        if (backView === 'similar' && allSimilarCandidates.length === 0 && !loadingSimilar && album?.name) {
             setLoadingSimilar(true);
             getSimilarAlbums(album.name, album.artist)
-                .then(data => setSimilarAlbums(data || []))
+                .then(data => {
+                    const fullList = data || [];
+                    setAllSimilarCandidates(fullList);
+                    setVisibleSimilar(fullList.slice(0, 6)); // Initial batch
+                    setSimilarIndex(0);
+                })
                 .catch(err => console.error(err))
                 .finally(() => setLoadingSimilar(false));
         }
-    }, [backView, album, similarAlbums, loadingSimilar]);
+    }, [backView, album, allSimilarCandidates, loadingSimilar]);
 
     if (!album) return null;
 
@@ -297,20 +325,32 @@ export default function AlbumHero({ album, musicPlatform, streamingMode }) {
 
                         {backView === 'similar' && (
                             <div className="fade-enter">
-                                <h2>Similar Albums</h2>
+                                <div className="similar-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                                    <h2>Similar Albums</h2>
+                                    {allSimilarCandidates.length > 6 && (
+                                        <button
+                                            className="action-btn small-btn"
+                                            onClick={handleGetMore}
+                                            title="Get another set of recommendations"
+                                            style={{ padding: '6px 12px', fontSize: '0.8rem' }}
+                                        >
+                                            <RotateCcw size={14} style={{ marginRight: '4px' }} /> Get More
+                                        </button>
+                                    )}
+                                </div>
                                 <div className="similar-albums-scroll">
                                     {loadingSimilar ? (
                                         <div className="loading-container">
                                             <p>Loading recommendations...</p>
                                         </div>
-                                    ) : (similarAlbums && similarAlbums.length > 0) ? (
+                                    ) : (visibleSimilar && visibleSimilar.length > 0) ? (
                                         <div className="carousel-wrapper">
                                             <button className="carousel-btn left" onClick={scrollLeft} aria-label="Scroll left">
                                                 <ChevronLeft size={24} />
                                             </button>
 
                                             <div className="hero-similar-carousel" ref={scrollRef}>
-                                                {similarAlbums.map(alb => {
+                                                {visibleSimilar.map(alb => {
                                                     const config = getPlatformConfig(musicPlatform);
                                                     const link = getStreamingLink(alb, musicPlatform, streamingMode);
                                                     const isWeb = link.startsWith('http');
@@ -359,7 +399,6 @@ export default function AlbumHero({ album, musicPlatform, streamingMode }) {
                         )}
                     </div>
                 </div>
-
             </div>
         </div>
     );

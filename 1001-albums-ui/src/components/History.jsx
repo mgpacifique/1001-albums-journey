@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { LayoutGrid, List as ListIcon, Play, ArrowDownUp, Music, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LayoutGrid, List as ListIcon, Play, ArrowDownUp, Music, ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react';
 import { getSimilarAlbums } from '../api';
 import { getStreamingLink, getPlatformConfig } from '../utils/streaming';
 import './History.css';
@@ -17,14 +17,18 @@ export default function History({ history, musicPlatform, streamingMode }) {
     const [selectedAlbum, setSelectedAlbum] = useState(null);
 
     // Similar Albums State for Modal
-    const [similarAlbums, setSimilarAlbums] = useState(null);
+    const [allSimilarCandidates, setAllSimilarCandidates] = useState([]);
+    const [visibleSimilar, setVisibleSimilar] = useState(null);
+    const [similarIndex, setSimilarIndex] = useState(0);
     const [loadingSimilar, setLoadingSimilar] = useState(false);
     const [activeTab, setActiveTab] = useState('details'); // 'details' | 'similar'
     const scrollRef = useRef(null);
 
     // Reset similar albums when modal is closed or album changes
     useEffect(() => {
-        setSimilarAlbums(null);
+        setAllSimilarCandidates([]);
+        setVisibleSimilar(null);
+        setSimilarIndex(0);
         setLoadingSimilar(false);
         setActiveTab('details'); // Reset tab
     }, [selectedAlbum]);
@@ -33,14 +37,32 @@ export default function History({ history, musicPlatform, streamingMode }) {
         if (!selectedAlbum) return;
         setLoadingSimilar(true);
         getSimilarAlbums(selectedAlbum.name, selectedAlbum.artist)
-            .then(data => setSimilarAlbums(data || []))
+            .then(data => {
+                const fullList = data || [];
+                setAllSimilarCandidates(fullList);
+                setVisibleSimilar(fullList.slice(0, 6)); // Initial batch
+                setSimilarIndex(0);
+            })
             .catch(err => console.error(err))
             .finally(() => setLoadingSimilar(false));
     };
 
+    const handleGetMore = () => {
+        if (!allSimilarCandidates || allSimilarCandidates.length === 0) return;
+
+        let newIndex = similarIndex + 6;
+        if (newIndex >= allSimilarCandidates.length) {
+            newIndex = 0;
+        }
+
+        const nextBatch = allSimilarCandidates.slice(newIndex, newIndex + 6);
+        setVisibleSimilar(nextBatch);
+        setSimilarIndex(newIndex);
+    };
+
     const handleTabChange = (tab) => {
         setActiveTab(tab);
-        if (tab === 'similar' && !similarAlbums && !loadingSimilar) {
+        if (tab === 'similar' && allSimilarCandidates.length === 0 && !loadingSimilar) {
             handleFetchSimilar();
         }
     };
@@ -316,10 +338,21 @@ export default function History({ history, musicPlatform, streamingMode }) {
                                     <div className="tab-content animate-fade-in modal-similar-section">
                                         {loadingSimilar && <p className="loading-text">Finding similar albums...</p>}
 
-                                        {similarAlbums && similarAlbums.length > 0 && (
+                                        {visibleSimilar && visibleSimilar.length > 0 && (
                                             <div className="similar-grid-container">
+                                                <div className="similar-actions-row" style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
+                                                    {allSimilarCandidates.length > 6 && (
+                                                        <button
+                                                            className="action-btn small-btn"
+                                                            onClick={handleGetMore}
+                                                            title="Get another set of recommendations"
+                                                        >
+                                                            <RotateCcw size={14} style={{ marginRight: '4px' }} /> Get More
+                                                        </button>
+                                                    )}
+                                                </div>
                                                 <div className="similar-grid">
-                                                    {similarAlbums.map(alb => {
+                                                    {visibleSimilar.map(alb => {
                                                         const link = getStreamingLink(alb, musicPlatform, streamingMode);
                                                         const isWeb = link.startsWith('http');
                                                         return (
@@ -348,7 +381,7 @@ export default function History({ history, musicPlatform, streamingMode }) {
                                             </div>
                                         )}
 
-                                        {similarAlbums && similarAlbums.length === 0 && !loadingSimilar && (
+                                        {visibleSimilar && visibleSimilar.length === 0 && !loadingSimilar && (
                                             <p className="empty-text">No recommendations found.</p>
                                         )}
                                     </div>

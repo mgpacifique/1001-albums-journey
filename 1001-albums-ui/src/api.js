@@ -129,13 +129,13 @@ export async function getSimilarAlbums(albumName, artistName) {
     // WORKAROUND: Get similar CURRENT ARTISTS -> Get TOP ALBUM for each similar artist.
 
     // 1. Get Similar Artists
-    // FETCH MORE (20) to account for aggressive filtering
+    // FETCH MORE (60) to allow for client-side pagination/shuffling
     const simArtistUrl = new URL(LASTFM_BASE_URL);
     simArtistUrl.searchParams.append('method', 'artist.getSimilar');
     simArtistUrl.searchParams.append('artist', artistName.trim());
     simArtistUrl.searchParams.append('api_key', LASTFM_API_KEY.trim());
     simArtistUrl.searchParams.append('format', 'json');
-    simArtistUrl.searchParams.append('limit', '20');
+    simArtistUrl.searchParams.append('limit', '60');
     simArtistUrl.searchParams.append('autocorrect', '1');
 
     console.log("Fetching Similar Artists:", simArtistUrl.toString());
@@ -151,6 +151,7 @@ export async function getSimilarAlbums(albumName, artistName) {
       : [simData.similarartists.artist];
 
     // 2. For each similar artist, get their Top Album
+    // We limit concurrency to avoid browser/network limits if needed, but Promise.all is usually fine for ~60
     const albumPromises = similarArtists.map(async (artist) => {
       try {
         const topAlbUrl = new URL(LASTFM_BASE_URL);
@@ -189,8 +190,8 @@ export async function getSimilarAlbums(albumName, artistName) {
     });
 
     const results = await Promise.all(albumPromises);
-    // Filter nulls and return only top 6 valid ones
-    return results.filter(a => a && a.name && a.image).slice(0, 6);
+    // Filter nulls and return ALL valid ones (Frontend handles slicing)
+    return results.filter(a => a && a.name && a.image);
 
   } catch (error) {
     console.error("Error fetching recommendations:", error);
