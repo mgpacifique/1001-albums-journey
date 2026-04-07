@@ -83,7 +83,7 @@ export default function AlbumHero({ album, musicPlatform, streamingMode }) {
     useEffect(() => {
         if (backView === 'reviews' && !realStats && !loadingStats && album?.name) {
             setLoadingStats(true);
-            getAlbumStats(album.name)
+            getAlbumStats(album.name, album.slug)
                 .then(stats => setRealStats(stats))
                 .catch(err => console.error(err))
                 .finally(() => setLoadingStats(false));
@@ -161,7 +161,8 @@ export default function AlbumHero({ album, musicPlatform, streamingMode }) {
                                         if (link.startsWith('http')) {
                                             window.open(link, '_blank');
                                         } else {
-                                            window.location.href = link;
+                                            // Use window.open for protocol URIs (e.g. spotify:) - more reliable on Windows
+                                            window.open(link, '_self');
                                         }
                                     }}
                                     className={`action-btn ${musicPlatform}`}

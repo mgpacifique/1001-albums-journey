@@ -54,10 +54,25 @@ async function ensureAlbumStats() {
   return null;
 }
 
-export async function getAlbumStats(albumName) {
+export async function getAlbumStats(albumName, albumSlug) {
   if (!albumName) return null;
 
   try {
+    // If we have a slug, try fetching the individual album stats endpoint
+    // which includes votesByGrade distribution data
+    if (albumSlug) {
+      try {
+        const response = await fetch(`${BASE_URL}/albums/${albumSlug}/stats`);
+        if (response.ok) {
+          const data = await response.json();
+          return data;
+        }
+      } catch (e) {
+        console.warn('Individual album stats failed, falling back to global stats', e);
+      }
+    }
+
+    // Fallback: find album from global stats cache (no votesByGrade)
     const stats = await ensureAlbumStats();
 
     if (stats && stats.albums) {

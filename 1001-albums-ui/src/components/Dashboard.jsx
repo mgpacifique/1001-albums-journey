@@ -52,7 +52,7 @@ export default function Dashboard({ data, musicPlatform, streamingMode, onOpenSe
             <main>
                 {/* 1. HERO ALBUM (Album of the Day) */}
                 {data.currentAlbum ? (
-                    <AlbumHero album={data.currentAlbum} musicPlatform={musicPlatform} />
+                    <AlbumHero album={data.currentAlbum} musicPlatform={musicPlatform} streamingMode={streamingMode} />
                 ) : (
                     <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center' }}>
                         <h2>No album for today!</h2>

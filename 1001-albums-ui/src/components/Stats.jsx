@@ -95,7 +95,8 @@ export default function Stats({ history }) {
 
     // 5. Genre Data
     const genreCounts = history.reduce((acc, curr) => {
-        curr.genres?.forEach(g => {
+        const genres = curr.album?.genres || curr.genres || [];
+        genres.forEach(g => {
             acc[g] = (acc[g] || 0) + 1;
         });
         return acc;
@@ -284,9 +285,9 @@ export default function Stats({ history }) {
                             {fiveStarAlbums.map((a, i) => (
                                 <div key={i} className="stats-collage-item">
                                     <img
-                                        src={a.images?.[0]?.url || a.image}
-                                        alt={a.name}
-                                        title={`${a.name} - ${a.artist}`}
+                                        src={a.album?.images?.[0]?.url || a.images?.[0]?.url || a.image}
+                                        alt={a.album?.name || a.name}
+                                        title={`${a.album?.name || a.name} - ${a.album?.artist || a.artist}`}
                                         crossOrigin="anonymous"
                                     />
                                 </div>
@@ -309,9 +310,9 @@ export default function Stats({ history }) {
                             {oneStarAlbums.map((a, i) => (
                                 <div key={i} className="stats-collage-item">
                                     <img
-                                        src={a.images?.[0]?.url || a.image}
-                                        alt={a.name}
-                                        title={`${a.name} - ${a.artist}`}
+                                        src={a.album?.images?.[0]?.url || a.images?.[0]?.url || a.image}
+                                        alt={a.album?.name || a.name}
+                                        title={`${a.album?.name || a.name} - ${a.album?.artist || a.artist}`}
                                         crossOrigin="anonymous"
                                     />
                                 </div>
@@ -333,14 +334,14 @@ export default function Stats({ history }) {
 
                 <div className="album-wall" ref={wallRef}>
                     <h2 className="export-title">My Album Journey</h2>
-                    {history.map((album, i) => (
+                    {history.map((item, i) => (
                         <div key={i} className="wall-item">
                             <img
-                                src={album.images?.[0]?.url || album.image}
-                                alt={album.name}
+                                src={item.album?.images?.[0]?.url || item.images?.[0]?.url || item.image}
+                                alt={item.album?.name || item.name}
                                 crossOrigin="anonymous"
                                 onError={(e) => e.target.style.display = 'none'}
-                                title={`${album.name} (${album.globalRating?.toFixed(1) || 'N/A'})`}
+                                title={`${item.album?.name || item.name} (${item.globalRating?.toFixed(1) || 'N/A'})`}
                             />
                         </div>
                     ))}
