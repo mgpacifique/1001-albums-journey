@@ -110,6 +110,21 @@ export default function AlbumHero({ album, musicPlatform, streamingMode }) {
 
     const imageUrl = album.images?.[0]?.url || album.image;
 
+    // Synthesize estimated per-star vote counts using a Gaussian curve
+    // (the API only provides averageRating + votes, no per-star breakdown)
+    const distRows = (() => {
+        const avg = realStats?.averageRating || 0;
+        const totalVotes = realStats?.votes || 0;
+        if (!avg || !totalVotes) return [5, 4, 3, 2, 1].map(s => ({ stars: s, count: 0, pct: 0 }));
+        const sigma = 1.0;
+        const raw = [1, 2, 3, 4, 5].map(s => Math.exp(-0.5 * Math.pow((s - avg) / sigma, 2)));
+        const rawSum = raw.reduce((a, b) => a + b, 0);
+        return [5, 4, 3, 2, 1].map((stars, i) => {
+            const count = Math.round((raw[5 - 1 - i] / rawSum) * totalVotes);
+            return { stars, count, pct: (count / totalVotes) * 100 };
+        });
+    })();
+
     return (
         <div className="album-scene animate-fade-in">
             <div className={`album-card ${isFlipped ? 'is-flipped' : ''}`}>
@@ -278,29 +293,19 @@ export default function AlbumHero({ album, musicPlatform, streamingMode }) {
                                             {loadingStats ? (
                                                 <p style={{ color: '#888', fontSize: '0.9rem' }}>Loading distribution...</p>
                                             ) : (
-                                                [5, 4, 3, 2, 1].map(stars => {
-                                                    // Calculate percentage from real stats
-                                                    let percentage = 0;
-                                                    let count = 0;
-
-                                                    if (realStats && realStats.votesByGrade) {
-                                                        count = realStats.votesByGrade[String(stars)] || 0;
-                                                        percentage = realStats.votes > 0 ? (count / realStats.votes) * 100 : 0;
-                                                    }
-
-                                                    return (
-                                                        <div key={stars} className="dist-row">
-                                                            <span className="star-label">{stars} ★</span>
-                                                            <div className="dist-bar-bg">
-                                                                <div className="dist-bar-fill" style={{ width: `${percentage}%` }}></div>
-                                                            </div>
-                                                            {realStats && <span style={{ fontSize: '0.7rem', color: '#666', minWidth: '30px' }}>{count}</span>}
+                                                distRows.map(({ stars, count, pct }) => (
+                                                    <div key={stars} className="dist-row">
+                                                        <span className="star-label">{stars} ★</span>
+                                                        <div className="dist-bar-bg">
+                                                            <div className="dist-bar-fill" style={{ width: `${pct}%` }}></div>
                                                         </div>
-                                                    );
-                                                })
+                                                        {realStats && <span style={{ fontSize: '0.7rem', color: '#666', minWidth: '30px' }}>{count > 0 ? `~${count.toLocaleString()}` : '0'}</span>}
+                                                    </div>
+                                                ))
                                             )}
                                         </div>
-                                    </div>
+
+                                    </div>{/* end reviews-header-stats */}
 
                                     <div className="review-text-section">
                                         <h3>My Review</h3>
